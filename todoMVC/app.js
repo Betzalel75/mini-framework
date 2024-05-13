@@ -14,6 +14,4 @@ const routes = [
 ];
 
 // Initialisation du routeur
-const router = new Router(routes);
-
-export default router
+export default new Router(routes);

@@ -1,8 +1,6 @@
 // todoList.js
 
 import { createElement, addEvent } from "../core/dom.js";
-// import State from "../core/state.js";
-import Button from "./button.js";
 
 class TodoList {
   constructor(state, filter = "all") {
@@ -27,27 +25,30 @@ class TodoList {
     this.element.innerHTML = "";
     todos.forEach((todo) => {
       const todoItem = createElement("li", {
-        className: todo.completed ? "completed" : "",
-      });
+        className: todo.completed ? "completed checked" : "",
+      }, todo.text);
       const toggle = createElement("input", {
-        type: "checkbox",
-        className: "toggle",
+        className: "checked",
         checked: todo.completed,
       });
-      const label = createElement("label", {}, todo.text);
-      const destroy = new Button("destroy", "X", () =>
-        this.removeTodo(todo.id)
-      );
+      const destroy = createElement("span", {}, "x");
+      addEvent(destroy, 'click', () => this.removeTodo(todo.id));
 
       todoItem.addEventListener("click", () => {
         this.toggleTodo(todo.id);
         this.render();
       });
       todoItem.appendChild(toggle);
-      todoItem.appendChild(label);
-      todoItem.appendChild(destroy.getElement()); // Obtenez l'élément bouton à partir du composant Button
+      todoItem.appendChild(destroy); // Obtenez l'élément bouton à partir du composant Button
       this.element.appendChild(todoItem);
     });
+
+    // Gérer le clic sur le lien "Clear completed"
+    addEvent(document.querySelector(".clear-completed"), "click", () => {
+      this.clearCompleted();
+      this.render();
+    });
+    this.bindEvents();
   }
 
   getFilteredTodos() {
@@ -66,6 +67,7 @@ class TodoList {
     const { todos } = this.state.getState();
     const newTodo = { id: Date.now(), text, completed: false };
     this.state.setState({ todos: [...todos, newTodo] });
+    this.updateTaskCounter();
   }
 
   toggleTodo(id) {
@@ -78,12 +80,14 @@ class TodoList {
     });
     // Mettre à jour l'état global avec les tâches modifiées
     this.state.setState({ todos: updatedTodos });
+    this.updateTaskCounter();
   }
 
   removeTodo(id) {
     const { todos } = this.state.getState();
     const updatedTodos = todos.filter((todo) => todo.id !== id);
     this.state.setState({ todos: updatedTodos });
+    this.updateTaskCounter();
   }
 
   bindEvents() {
@@ -94,30 +98,26 @@ class TodoList {
           this.render();
           event.target.value = "";
         }
+      }      
+    });
+    
+    addEvent(document.querySelector(".add-todo"), "click", () => {
+      const inputBox = document.querySelector(".new-todo");
+      if (inputBox.value.trim() !== "") {
+        this.addTodo(inputBox.value.trim());
+        this.render();
+        inputBox.value = "";
       }
     });
-    // Gérer le clic sur le bouton "Mark all as complete"
-    addEvent(document.querySelector(".toggle-all"), "click", () => {
-      this.toggleAllComplete();
-      this.render();
-    });
-
-    // Gérer le clic sur le lien "Clear completed"
-    addEvent(document.querySelector(".clear-completed"), "click", () => {
-      this.clearCompleted();
-      this.render();
-    });
   }
 
-  toggleAllComplete() {
+  updateTaskCounter() {
     const { todos } = this.state.getState();
-    const areAllCompleted = todos.every((todo) => todo.completed);
-    const updatedTodos = todos.map((todo) => ({
-      ...todo,
-      completed: !areAllCompleted, // Inverser l'état de complétude de chaque tâche
-    }));
-    this.state.setState({ todos: updatedTodos });
+    const remainingTodos = todos.filter(todo => !todo.completed).length;
+    const pluralSuffix = remainingTodos === 1 ? '' : 's';
+    document.getElementById('task-counter').textContent = `${remainingTodos} task${pluralSuffix} remaining`;
   }
+
 
   clearCompleted() {
     const { todos } = this.state.getState();

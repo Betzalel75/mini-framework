@@ -5,32 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TodoMVC App</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="../public/favicon.gif">
     <script src="custom-elements.js"></script>
 </head>
 <body>
     <header class="header">
         <h1>todos</h1>
-        <input class="new-todo" placeholder="What needs to be done?" autofocus>
+        <div class="row">
+            <input class="new-todo" id="input-box"  placeholder="What needs to be done?" autofocus>
+            <button class="add-todo">Add</button>
+        </div>
     </header>
     <section class="main">
-        <input id="toggle-all" class="toggle-all" type="checkbox">
-        <label for="toggle-all">Mark all as complete</label>
-        <ul class="todo-list"></ul>
+        <ul class="todo-list">
+        </ul>
     </section>
     <footer class="footer">
-        <span class="todo-count"></span>
-        <ul class="filters">
-            <li>
-                <my-link to="#/" class="selected">All</my-link>
-            </li>
-            <li>
-                <custom-link to="#/active">Active</custom-link>
-            </li>
-            <li>
-                <my-link to="#/completed">Completed</my-link>
-            </li>
-        </ul>
-        <custom-link to="javascript:void(0)" class="clear-completed">Clear completed</custom-link>
+        <p id="task-counter" class="todo-count"></p>
+        <div class="buttons">
+            <ul class="filters">
+                <p>
+                    <my-link to="#/" class="selected">All</my-link>
+                </p>
+                <p>
+                    <custom-link to="#/active">Active</custom-link>
+                </p>
+                <p>
+                    <my-link to="#/completed">Completed</my-link>
+                </p>
+                <p class="clear-completed">
+                    <custom-link to="javascript:void(0)" id="clear-completed">Clear completed</custom-link>
+                </p>
+            </ul>
+        </div>
     </footer>
     <script type="module" src="app.js"></script>
 </body>
