@@ -28,5 +28,9 @@ function addEvent(element, eventType, eventHandler) {
     element.addEventListener(eventType, eventHandler);
 }
 
+// Fonction pour supprimer un evenement a un element HTML
+function removeEvent(element, eventType, eventHandler) {
+    element.removeEventListener(eventType, eventHandler);
+}
 // Exports des fonctions
-export { createElement, addEvent };
+export { createElement, addEvent, removeEvent };

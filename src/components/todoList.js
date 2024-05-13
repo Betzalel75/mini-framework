@@ -1,6 +1,6 @@
 // todoList.js
 
-import { createElement, addEvent } from "../core/dom.js";
+import { createElement, addEvent, removeEvent } from "../core/dom.js";
 
 class TodoList {
   constructor(state, filter = "all") {
@@ -21,6 +21,8 @@ class TodoList {
 
   render() {
     if (!this.element) return;
+    const togAll = document.getElementById('toggle-all');
+    const self = this;
     const todos = this.getFilteredTodos();
     this.element.innerHTML = "";
     todos.forEach((todo) => {
@@ -34,8 +36,13 @@ class TodoList {
       const destroy = createElement("span", {}, "x");
       addEvent(destroy, 'click', () => this.removeTodo(todo.id));
 
-      todoItem.addEventListener("click", () => {
-        this.toggleTodo(todo.id);
+      addEvent(todoItem, "click", () => {
+        self.toggleTodo(todo.id);
+        if (!self.areAllCompleted()) {
+          if (togAll.classList.contains('checked')) {
+            togAll.classList.remove('checked');
+          }
+        }
         this.render();
       });
       todoItem.appendChild(toggle);
@@ -48,6 +55,25 @@ class TodoList {
       this.clearCompleted();
       this.render();
     });
+    // Gérer le clic sur le lien "toggle-all"
+    // Fonction de rappel pour l'événement click
+    function handleClick() {
+      // Suppression de l'événement click
+      removeEvent(togAll, "click", handleClick);
+      if (todos.length === 0) {
+        return false;
+      }
+      if(self.toggleAllComplete()){
+        togAll.classList.add("checked");
+      }else{
+        if (togAll.classList.contains('checked')) {
+          togAll.classList.remove('checked');
+        }
+      }
+    }
+    // Ajout de l'événement click
+    addEvent(togAll, "click", handleClick);
+
     this.bindEvents();
   }
 
@@ -91,24 +117,69 @@ class TodoList {
   }
 
   bindEvents() {
+    const togAll = document.getElementById('toggle-all');
+    const self = this;
     addEvent(document.querySelector(".new-todo"), "keypress", (event) => {
       if (event.key === "Enter") {
         if (event.target.value.trim() !== "") {
           this.addTodo(event.target.value.trim());
           this.render();
           event.target.value = "";
+          if (togAll.classList.contains('checked')) {
+            togAll.classList.remove('checked');
+          }
         }
-      }      
+      }
     });
-    
+
     addEvent(document.querySelector(".add-todo"), "click", () => {
       const inputBox = document.querySelector(".new-todo");
       if (inputBox.value.trim() !== "") {
         this.addTodo(inputBox.value.trim());
         this.render();
         inputBox.value = "";
+        if (togAll.classList.contains('checked')) {
+          togAll.classList.remove('checked');
+        }
       }
     });
+  }
+
+  markAllCompleted() {
+    const { todos } = this.state.getState();
+    const updatedTodos = todos.map(todo => ({
+      ...todo,
+      completed: true
+    }));
+    this.state.setState({ todos: updatedTodos });
+    this.render();
+  }
+
+  markAllUncompleted() {
+    const { todos } = this.state.getState();
+    const updatedTodos = todos.map(todo => ({
+      ...todo,
+      completed: false
+    }));
+    this.state.setState({ todos: updatedTodos });
+    this.render();
+  }
+
+  areAllCompleted() {
+    const { todos } = this.state.getState();
+    return todos.every(todo => todo.completed);
+  }
+
+  toggleAllComplete() {
+    if (this.areAllCompleted()) {
+      this.markAllUncompleted();
+      this.updateTaskCounter();
+      return false;
+    } else {
+      this.markAllCompleted();
+      this.updateTaskCounter();
+      return true;
+    }
   }
 
   updateTaskCounter() {

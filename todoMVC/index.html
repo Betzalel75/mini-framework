@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,15 +9,19 @@
     <link rel="icon" href="../public/favicon.gif">
     <script src="custom-elements.js"></script>
 </head>
+
 <body>
     <header class="header">
         <h1>todos</h1>
         <div class="row">
-            <input class="new-todo" id="input-box"  placeholder="What needs to be done?" autofocus>
+            <input class="new-todo" id="input-box" placeholder="What needs to be done?" autofocus>
             <button class="add-todo">Add</button>
         </div>
     </header>
     <section class="main">
+        <ul>
+            <li id="toggle-all" class="toggle-all">All as complete</li>
+        </ul>
         <ul class="todo-list">
         </ul>
     </section>
@@ -41,4 +46,5 @@
     </footer>
     <script type="module" src="app.js"></script>
 </body>
+
 </html>
