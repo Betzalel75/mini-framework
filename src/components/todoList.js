@@ -1,6 +1,6 @@
 // todoList.js
 
-import { createElement, addEvent, removeEvent } from "../core/dom.js";
+import { createElement, addEvent } from "../core/dom.js";
 
 // Définir une variable pour garder une trace de l'état du debounce
 let isDebounced = false;
@@ -31,12 +31,19 @@ class TodoList {
     todos.forEach((todo) => {
       const todoItem = createElement("li", {
         className: todo.completed ? "completed checked" : "",
-      }, todo.text);
+      });
+
+      const p = createElement('p', {}, todo.text);
 
       const destroy = createElement("span", {}, "x");
-      addEvent(destroy, 'click', () => this.removeTodo(todo.id));
-
-      addEvent(todoItem, "click", () => {
+      addEvent(destroy, 'click', (e) => {
+        e.stopPropagation();
+        self.removeTodo(todo.id);
+        this.render();
+      });
+      /**/
+      addEvent(p, "click", (e) => {
+        e.stopPropagation();
         self.toggleTodo(todo.id);
         if (!self.areAllCompleted()) {
           if (togAll.classList.contains('checked')) {
@@ -45,6 +52,14 @@ class TodoList {
         }
         this.render();
       });
+      todoItem.appendChild(p);
+      /**/
+      addEvent(todoItem, "dblclick", (e) => {
+        e.stopPropagation();
+        self.editTodo(e.target.querySelector('p').textContent);
+        self.removeTodo(todo.id);
+        this.render();
+      })
       todoItem.appendChild(destroy);
       this.element.appendChild(todoItem);
     });
@@ -54,35 +69,7 @@ class TodoList {
       this.clearCompleted();
       this.render();
     });
-    // function handleClick() {
-    //   console.log('click', );
-    //   // Suppression de l'événement click
-    //   removeEvent(togAll, "click", handleClick);
-    //   if (todos.length === 0) {
-    //     return false;
-    //   }
-
-    //   if(self.toggleAllComplete()){
-    //     togAll.classList.add("checked");
-    //   }else{
-    //     if (togAll.classList.contains('checked')) {
-    //       togAll.classList.remove('checked');
-    //     }
-    //   }
-    // }
-
-    // function debounce(callback, delay) {
-    //   let timeoutId;
-    //   return function () {
-    //     clearTimeout(timeoutId);
-
-    //     timeoutId = setTimeout(callback, delay);
-    //   };
-    // }
-    // // Ajout de l'événement click
-    // addEvent(togAll, "click", ()=>{
-    //   debounce(function(){handleClick()}, 300)();
-    // });
+    this.bindEvents();
   }
 
   getFilteredTodos() {
@@ -155,14 +142,12 @@ class TodoList {
     function handleClick() {
       if (!isDebounced) {
         isDebounced = true;
-        if (self.areAllCompleted()) {
-          self.markAllUncompleted();
+        if (self.toggleAllComplete()) {
+          togAll.classList.add("checked");
+        } else {
           if (togAll.classList.contains('checked')) {
             togAll.classList.remove('checked');
           }
-        } else {
-          self.markAllCompleted();
-          togAll.classList.add('checked');
         }
         setTimeout(() => {
           isDebounced = false;
@@ -173,6 +158,10 @@ class TodoList {
     // Ajouter l'événement click avec la fonction de débordement
     addEvent(togAll, "click", handleClick);
 
+  };
+
+  editTodo(text) {
+    document.querySelector(".new-todo").value = text;
   };
 
   markAllCompleted() {
