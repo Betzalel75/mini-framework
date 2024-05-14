@@ -2,6 +2,9 @@
 
 import { createElement, addEvent, removeEvent } from "../core/dom.js";
 
+// Définir une variable pour garder une trace de l'état du debounce
+let isDebounced = false;
+
 class TodoList {
   constructor(state, filter = "all") {
     this.filter = filter;
@@ -29,10 +32,7 @@ class TodoList {
       const todoItem = createElement("li", {
         className: todo.completed ? "completed checked" : "",
       }, todo.text);
-      const toggle = createElement("input", {
-        className: "checked",
-        checked: todo.completed,
-      });
+
       const destroy = createElement("span", {}, "x");
       addEvent(destroy, 'click', () => this.removeTodo(todo.id));
 
@@ -45,8 +45,7 @@ class TodoList {
         }
         this.render();
       });
-      todoItem.appendChild(toggle);
-      todoItem.appendChild(destroy); // Obtenez l'élément bouton à partir du composant Button
+      todoItem.appendChild(destroy);
       this.element.appendChild(todoItem);
     });
 
@@ -55,26 +54,35 @@ class TodoList {
       this.clearCompleted();
       this.render();
     });
-    // Gérer le clic sur le lien "toggle-all"
-    // Fonction de rappel pour l'événement click
-    function handleClick() {
-      // Suppression de l'événement click
-      removeEvent(togAll, "click", handleClick);
-      if (todos.length === 0) {
-        return false;
-      }
-      if(self.toggleAllComplete()){
-        togAll.classList.add("checked");
-      }else{
-        if (togAll.classList.contains('checked')) {
-          togAll.classList.remove('checked');
-        }
-      }
-    }
-    // Ajout de l'événement click
-    addEvent(togAll, "click", handleClick);
+    // function handleClick() {
+    //   console.log('click', );
+    //   // Suppression de l'événement click
+    //   removeEvent(togAll, "click", handleClick);
+    //   if (todos.length === 0) {
+    //     return false;
+    //   }
 
-    this.bindEvents();
+    //   if(self.toggleAllComplete()){
+    //     togAll.classList.add("checked");
+    //   }else{
+    //     if (togAll.classList.contains('checked')) {
+    //       togAll.classList.remove('checked');
+    //     }
+    //   }
+    // }
+
+    // function debounce(callback, delay) {
+    //   let timeoutId;
+    //   return function () {
+    //     clearTimeout(timeoutId);
+
+    //     timeoutId = setTimeout(callback, delay);
+    //   };
+    // }
+    // // Ajout de l'événement click
+    // addEvent(togAll, "click", ()=>{
+    //   debounce(function(){handleClick()}, 300)();
+    // });
   }
 
   getFilteredTodos() {
@@ -143,7 +151,29 @@ class TodoList {
         }
       }
     });
-  }
+    // Gérer l'événement click sur le bouton "toggle-all"
+    function handleClick() {
+      if (!isDebounced) {
+        isDebounced = true;
+        if (self.areAllCompleted()) {
+          self.markAllUncompleted();
+          if (togAll.classList.contains('checked')) {
+            togAll.classList.remove('checked');
+          }
+        } else {
+          self.markAllCompleted();
+          togAll.classList.add('checked');
+        }
+        setTimeout(() => {
+          isDebounced = false;
+        }, 300);
+      }
+    }
+
+    // Ajouter l'événement click avec la fonction de débordement
+    addEvent(togAll, "click", handleClick);
+
+  };
 
   markAllCompleted() {
     const { todos } = this.state.getState();
