@@ -7,7 +7,7 @@
     <title>TodoMVC App</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="../public/favicon.gif">
-    <script src="custom-elements.js"></script>
+    <script type="module" src="custom-elements.js"></script>
 </head>
 
 <body>
@@ -30,16 +30,16 @@
         <div class="buttons">
             <ul class="filters">
                 <p>
-                    <my-link to="#/" class="selected">All</my-link>
+                    <my-link to="/">All</my-link>
                 </p>
                 <p>
-                    <custom-link to="#/active">Active</custom-link>
+                    <my-link to="/active">Active</my-link>
                 </p>
                 <p>
-                    <my-link to="#/completed">Completed</my-link>
+                    <my-link to="/completed">Completed</my-link>
                 </p>
                 <p class="clear-completed">
-                    <custom-link to="javascript:void(0)" id="clear-completed">Clear completed</custom-link>
+                    <custom-link to="/" id="clear-completed">Clear completed</custom-link>
                 </p>
             </ul>
         </div>

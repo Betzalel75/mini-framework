@@ -1,10 +1,17 @@
 // dom.js
+import EventManager from "./events.js";
 
 // Fonction pour créer un élément HTML avec des attributs
 function createElement(tag, attributes = {}, children = []) {
     const element = document.createElement(tag);
     Object.entries(attributes).forEach(([key, value]) => {
-        element[key] = value;
+        if (key === 'class') {
+            element.className = value;
+        } else if (key === 'id') {
+            element.id = value;
+        } else {
+            element[key] = value;
+        }
     });
 
     // Vérifiez si children est un tableau, sinon convertissez-le en tableau
@@ -19,18 +26,30 @@ function createElement(tag, attributes = {}, children = []) {
         }
     });
 
+    // Retourner l'élément créé    
     return element;
 }
 
+function append(element, container) {
+    if (container instanceof Node) {
+        container.appendChild(element);
+      } else {
+        console.erro(container);
+      throw new Error("Container is not a valid DOM node");
+    }
+  }
 
 // Fonction pour ajouter un événement à un élément HTML
 function addEvent(element, eventType, eventHandler) {
-    element.addEventListener(eventType, eventHandler);
+    const event = new EventManager(element);
+    event.addEventListener(eventType, eventHandler);
 }
 
-// Fonction pour supprimer un evenement a un element HTML
+// Fonction pour supprimer un événement d'un élément HTML
 function removeEvent(element, eventType, eventHandler) {
-    element.removeEventListener(eventType, eventHandler);
+    const event = new EventManager(element);
+    event.removeEventListener(eventType, eventHandler);
 }
+
 // Exports des fonctions
-export { createElement, addEvent, removeEvent };
+export { createElement, append ,addEvent, removeEvent };

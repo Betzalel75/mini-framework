@@ -20,6 +20,14 @@ class State {
     // Méthode pour s'abonner aux changements d'état
     subscribe(listener) {
         this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter((l) => l !== listener);
+        };
+    }
+    // Méthode pour réinitialiser l'état à une valeur initiale vide
+    resetState() {
+        this.state = {};
+        this.notifyListeners();
     }
 
     // Méthode pour notifier tous les auditeurs lorsqu'il y a un changement d'état

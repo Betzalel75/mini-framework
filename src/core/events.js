@@ -1,7 +1,8 @@
 // events.js
 
 class EventManager {
-    constructor() {
+    constructor(element) {
+        this.element = element;
         this.events = {};
     }
 
@@ -9,6 +10,10 @@ class EventManager {
     addEventListener(eventType, listener) {
         if (!this.events[eventType]) {
             this.events[eventType] = [];
+            // Attacher l'écouteur d'événement DOM
+            this.element.addEventListener(eventType, (event) => {
+                this.dispatchEvent(eventType, event);
+            });
         }
         this.events[eventType].push(listener);
     }
@@ -17,6 +22,13 @@ class EventManager {
     removeEventListener(eventType, listener) {
         if (this.events[eventType]) {
             this.events[eventType] = this.events[eventType].filter(fn => fn !== listener);
+            if (this.events[eventType].length === 0) {
+                delete this.events[eventType];
+                // Retirer l'écouteur d'événement DOM
+                this.element.removeEventListener(eventType, (event) => {
+                    this.dispatchEvent(eventType, event);
+                });
+            }
         }
     }
 

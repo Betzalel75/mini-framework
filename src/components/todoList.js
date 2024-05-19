@@ -1,23 +1,20 @@
-// todoList.js
+import { createElement, addEvent, append } from "../core/dom.js";
 
-import { createElement, addEvent } from "../core/dom.js";
-
-// Définir une variable pour garder une trace de l'état du debounce
 let isDebounced = false;
 
 class TodoList {
-  constructor(state, filter = "all") {
+  constructor(store, filter = "all") {
     this.filter = filter;
-    this.state = state;
+    this.store = store;
     this.element = this.createTodoList();
-    this.bindEvents();
+    this.render();
   }
 
   createTodoList() {
     let todoList = document.querySelector(".todo-list");
     if (!todoList) {
       todoList = createElement("ul", { className: "todo-list" });
-      document.querySelector(".main").appendChild(todoList);
+      append(todoList, document.querySelector(".main"));
     }
     return todoList;
   }
@@ -25,8 +22,7 @@ class TodoList {
   render() {
     if (!this.element) return;
     const togAll = document.getElementById('toggle-all');
-    const self = this;
-    const todos = this.getFilteredTodos();
+    const todos = this.getFilteredTodos(this.filter);
     this.element.innerHTML = "";
     todos.forEach((todo) => {
       const todoItem = createElement("li", {
@@ -38,77 +34,66 @@ class TodoList {
       const destroy = createElement("span", {}, "x");
       addEvent(destroy, 'click', (e) => {
         e.stopPropagation();
-        self.removeTodo(todo.id);
+        this.store.commit('removeTodo', todo.id);
         this.render();
       });
-      /**/
+
       addEvent(p, "click", (e) => {
         e.stopPropagation();
-        self.toggleTodo(todo.id);
-        if (!self.areAllCompleted()) {
+        this.store.commit('toggleTodo', todo.id);
+        if (!this.areAllCompleted()) {
           if (togAll.classList.contains('checked')) {
             togAll.classList.remove('checked');
           }
         }
+        this.updateTaskCounter();
         this.render();
       });
-      todoItem.appendChild(p);
-      /**/
+
+      append(p, todoItem);
       addEvent(todoItem, "dblclick", (e) => {
         e.stopPropagation();
-        self.editTodo(e.target.querySelector('p').textContent);
-        self.removeTodo(todo.id);
+        this.editTodoText(todo.text);
+        this.store.commit('removeTodo', todo.id);
         this.render();
-      })
-      todoItem.appendChild(destroy);
-      this.element.appendChild(todoItem);
+      });
+      append(destroy, todoItem);
+      append(todoItem, this.element);
     });
 
-    // Gérer le clic sur le lien "Clear completed"
     addEvent(document.querySelector(".clear-completed"), "click", () => {
-      this.clearCompleted();
+      this.store.commit('clearCompleted');
       this.render();
     });
     this.bindEvents();
   }
 
-  getFilteredTodos() {
-    const { todos } = this.state.getState();
-    switch (this.filter) {
+  getFilteredTodos(filter) {
+    const todos = this.store;
+    switch (filter) {
       case "active":
-        return todos.filter((todo) => !todo.completed);
+        return todos.getters.active;
       case "completed":
-        return todos.filter((todo) => todo.completed);
+        return todos.getters.completed;
       default:
-        return todos;
+        return todos.getters.all;
     }
   }
 
   addTodo(text) {
-    const { todos } = this.state.getState();
-    const newTodo = { id: Date.now(), text, completed: false };
-    this.state.setState({ todos: [...todos, newTodo] });
+    this.store.commit('addTodo', { id: Date.now(), text, completed: false });
     this.updateTaskCounter();
   }
 
-  toggleTodo(id) {
-    const { todos } = this.state.getState();
-    const updatedTodos = todos.map((todo) => {
-      if (todo.id === id) {
-        todo.completed = !todo.completed;
-      }
-      return todo;
-    });
-    // Mettre à jour l'état global avec les tâches modifiées
-    this.state.setState({ todos: updatedTodos });
-    this.updateTaskCounter();
+  addTodoWithFilter(text) {
+    const path = window.location.hash.slice(1) || '/';
+    this.addTodo(text);
+    this.filter = path.slice(1);
+    this.render();
   }
 
-  removeTodo(id) {
-    const { todos } = this.state.getState();
-    const updatedTodos = todos.filter((todo) => todo.id !== id);
-    this.state.setState({ todos: updatedTodos });
-    this.updateTaskCounter();
+  editTodoText(text) {
+    document.querySelector(".new-todo").value = text;
   }
 
   bindEvents() {
@@ -117,8 +102,7 @@ class TodoList {
     addEvent(document.querySelector(".new-todo"), "keypress", (event) => {
       if (event.key === "Enter") {
         if (event.target.value.trim() !== "") {
-          this.addTodo(event.target.value.trim());
-          this.render();
+          this.addTodoWithFilter(event.target.value.trim());
           event.target.value = "";
           if (togAll.classList.contains('checked')) {
             togAll.classList.remove('checked');
@@ -130,15 +114,14 @@ class TodoList {
     addEvent(document.querySelector(".add-todo"), "click", () => {
       const inputBox = document.querySelector(".new-todo");
       if (inputBox.value.trim() !== "") {
-        this.addTodo(inputBox.value.trim());
-        this.render();
+        this.addTodoWithFilter(inputBox.value.trim());
         inputBox.value = "";
         if (togAll.classList.contains('checked')) {
           togAll.classList.remove('checked');
         }
       }
     });
-    // Gérer l'événement click sur le bouton "toggle-all"
+
     function handleClick() {
       if (!isDebounced) {
         isDebounced = true;
@@ -154,39 +137,21 @@ class TodoList {
         }, 300);
       }
     }
-
-    // Ajouter l'événement click avec la fonction de débordement
     addEvent(togAll, "click", handleClick);
-
-  };
-
-  editTodo(text) {
-    document.querySelector(".new-todo").value = text;
-  };
+  }
 
   markAllCompleted() {
-    const { todos } = this.state.getState();
-    const updatedTodos = todos.map(todo => ({
-      ...todo,
-      completed: true
-    }));
-    this.state.setState({ todos: updatedTodos });
+    this.store.commit('markAllCompleted');
     this.render();
   }
 
   markAllUncompleted() {
-    const { todos } = this.state.getState();
-    const updatedTodos = todos.map(todo => ({
-      ...todo,
-      completed: false
-    }));
-    this.state.setState({ todos: updatedTodos });
+    this.store.commit('markAllUncompleted');
     this.render();
   }
 
   areAllCompleted() {
-    const { todos } = this.state.getState();
-    return todos.every(todo => todo.completed);
+    return this.store.state.todos.every(todo => todo.completed);
   }
 
   toggleAllComplete() {
@@ -202,21 +167,9 @@ class TodoList {
   }
 
   updateTaskCounter() {
-    const { todos } = this.state.getState();
-    const remainingTodos = todos.filter(todo => !todo.completed).length;
+    const remainingTodos = this.store.getters.all.filter(todo => !todo.completed).length;
     const pluralSuffix = remainingTodos === 1 ? '' : 's';
     document.getElementById('task-counter').textContent = `${remainingTodos} task${pluralSuffix} remaining`;
-  }
-
-
-  clearCompleted() {
-    const { todos } = this.state.getState();
-    const updatedTodos = todos.filter((todo) => !todo.completed);
-    this.state.setState({ todos: updatedTodos });
-  }
-
-  getElement() {
-    return this.element || document.createElement("div");
   }
 }
 

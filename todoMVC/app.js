@@ -1,15 +1,14 @@
 // app.js
 
 import App from '../src/index.js'
+import store from '../src/store/index.js';
+import router from '../src/router/index.js';
 
-// État global pour les tâches
-const state = new App.state({ todos: [] });
-// Routes de l'application TodoMVC
-const routes = [
-    { path: '/', component: new App.todoList(state) },
-    { path: '/active', component: new App.todoList(state, 'active') },
-    { path: '/completed', component: new App.todoList(state, 'completed') }
-];
+// Instance de l'application
+const app = new App.Setting();
 
-// Initialisation du routeur
-export default new App.router(routes);
+// // Utiliser le store dans l'application
+app.use(store);
+app.use(router);
+
+export default app;
