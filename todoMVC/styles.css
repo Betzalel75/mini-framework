@@ -144,6 +144,10 @@ header h1 {
     font-family: "Sedan SC", serif;
 }
 
+.editing{
+    visibility: hidden !important;
+}
+
 .main{
     margin-bottom: 2rem;
 }

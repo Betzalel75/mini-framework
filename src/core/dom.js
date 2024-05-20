@@ -34,7 +34,7 @@ function append(element, container) {
     if (container instanceof Node) {
         container.appendChild(element);
       } else {
-        console.erro(container);
+        console.error(container);
       throw new Error("Container is not a valid DOM node");
     }
   }

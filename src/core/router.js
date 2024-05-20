@@ -41,7 +41,7 @@ class Router {
         main.appendChild(component.element); // Rendre le nouveau composant
         component.render();
       }else{
-        console.log('main not found');
+        console.error('main not found');
       }
     }
   }

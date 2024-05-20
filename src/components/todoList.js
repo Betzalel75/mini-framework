@@ -38,25 +38,34 @@ class TodoList {
         this.render();
       });
 
-      addEvent(p, "click", (e) => {
+      let clickTimer = null;
+      const clickDelay = 150; // Délai en millisecondes pour différencier clic simple et double-clic
+  
+      const handleClick = (e) => {
         e.stopPropagation();
-        this.store.commit('toggleTodo', todo.id);
-        if (!this.areAllCompleted()) {
-          if (togAll.classList.contains('checked')) {
-            togAll.classList.remove('checked');
-          }
+        if (clickTimer) {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+          this.editTodoText(todoItem, todo.id);
+        } else {
+          clickTimer = setTimeout(() => {
+            this.store.commit('toggleTodo', todo.id);
+            if (!this.areAllCompleted()) {
+              if (togAll.classList.contains('checked')) {
+                togAll.classList.remove('checked');
+              }
+            }
+            this.updateTaskCounter();
+            this.render();
+            clickTimer = null;
+          }, clickDelay);
         }
-        this.updateTaskCounter();
-        this.render();
-      });
+      };
 
+      addEvent(p, "click", handleClick);
       append(p, todoItem);
-      addEvent(todoItem, "dblclick", (e) => {
-        e.stopPropagation();
-        this.editTodoText(todo.text);
-        this.store.commit('removeTodo', todo.id);
-        this.render();
-      });
+
+      addEvent(todoItem, "click", handleClick);
       append(destroy, todoItem);
       append(todoItem, this.element);
     });
@@ -92,9 +101,69 @@ class TodoList {
     this.render();
   }
 
-  editTodoText(text) {
-    document.querySelector(".new-todo").value = text;
+  editTodoText(todoItem, idItem) {
+    const textElement = todoItem.querySelector('p');
+    const currentText = textElement.textContent;
+
+    // Créer l'élément d'input pour l'édition
+    const input = createElement('input', { type: 'text', value: currentText, class: 'edit' });
+
+    // Remplacer le texte par l'input
+    todoItem.replaceChild(input, textElement)
+
+    input.focus();
+
+    const saveEdit = () => {
+      const newText = input.value.trim();
+      if (newText && newText !== currentText) {
+        this.store.commit('updateTodo', { id: idItem, text: newText });
+      }
+
+      // Créer un nouvel élément de liste pour remplacer l'ancien
+      const updatedTodoItem = createElement("li", {
+        class: todoItem.completed ? "completed checked" : "",
+        "data-id": idItem
+      });
+
+      const updatedTextElement = createElement('p', {}, newText || currentText);
+      const destroy = createElement("span", {}, "x");
+
+      addEvent(destroy, 'click', (e) => {
+        e.stopPropagation();
+        this.store.commit('removeTodo', idItem);
+        this.render();
+      });
+
+      addEvent(updatedTextElement, "click", (e) => {
+        e.stopPropagation();
+        this.store.commit('toggleTodo', idItem);
+        if (!this.areAllCompleted()) {
+          if (document.getElementById('toggle-all').classList.contains('checked')) {
+            document.getElementById('toggle-all').classList.remove('checked');
+          }
+        }
+        this.updateTaskCounter();
+        this.render();
+      });
+
+      addEvent(updatedTodoItem, "dblclick", (e) => {
+        e.stopPropagation();
+        this.editTodoText(updatedTodoItem);
+      });
+
+      append(updatedTextElement, updatedTodoItem);
+      append(destroy, updatedTodoItem);
+      this.render();
+    };
+
+    addEvent(input, 'blur', saveEdit);
+    addEvent(input, 'keypress', (e) => {
+      if (e.key === 'Enter') {
+        saveEdit();
+      }
+    });
   }
+
 
   bindEvents() {
     const togAll = document.getElementById('toggle-all');
@@ -122,7 +191,9 @@ class TodoList {
       }
     });
 
-    function handleClick() {
+    function handleClick(e) {
+      e.preventDefault();
+      e.stopPropagation();
       if (!isDebounced) {
         isDebounced = true;
         if (self.toggleAllComplete()) {
@@ -136,6 +207,11 @@ class TodoList {
           isDebounced = false;
         }, 300);
       }
+    }
+    if (this.store.getters.all <= 0) {
+      togAll.classList.add("editing");
+    }else{
+      togAll.classList.remove("editing");
     }
     addEvent(togAll, "click", handleClick);
   }

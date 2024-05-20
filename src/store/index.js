@@ -30,6 +30,12 @@ const storeOptions = {
         markAllUncompleted(state) {
             state.todos.forEach(todo => todo.completed = false);
         },
+        updateTodo(state, { id, text }) {
+            const todo = state.todos.find(todo => todo.id === id);
+            if (todo) {
+                todo.text = text;
+            }
+        },
     },
     getters: {
         completed(state) {
