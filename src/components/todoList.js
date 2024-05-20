@@ -35,6 +35,7 @@ class TodoList {
       addEvent(destroy, 'click', (e) => {
         e.stopPropagation();
         this.store.commit('removeTodo', todo.id);
+        this.updateTaskCounter();
         this.render();
       });
 
@@ -131,6 +132,7 @@ class TodoList {
       addEvent(destroy, 'click', (e) => {
         e.stopPropagation();
         this.store.commit('removeTodo', idItem);
+        this.updateTaskCounter();
         this.render();
       });
 
