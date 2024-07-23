@@ -548,4 +548,7 @@ addEvent(document.querySelector(".clear-completed"), "click", () => {
 ## LICENSE
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
+## Auteurs
+- 👤 **Betzalel75**: [Profile](https://github.com/Betzalel75)
 ---
